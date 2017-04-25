@@ -34,6 +34,7 @@
     // Se obtiene el array de los hoteles que vienen de la vista
     public static function updateHotels($sesion, $pais, $hotels){
     	// Obtener los hoteles que se hayan desactivado
+    	$uncommit = 0;
     	if (Session::get('hoteles')) {
     		//obtener la cantidad de hoteles activos previo
     		$activos = Session::get('indice');
@@ -66,9 +67,13 @@
 								    			 WHERE id_hotel = :hotel
 								    			   AND id_pais  = :pais
 								    			   AND id_producto = :sesion;");
-				$setStatus->execute(array(':hotel'  => $desactivados[$r],
+				$save = $setStatus->execute(array(':hotel'  => $desactivados[$r],
 										  ':pais'   => $pais,
-										  ':sesion' => $sesion));	
+										  ':sesion' => $sesion));
+
+				if (!$save) {
+					$uncommit ++;		# code...
+				}	
     		}
     	}
 
@@ -101,9 +106,12 @@
 							    					  WHERE id_hotel = :hotel
 							    					    AND id_pais = :pais
 							    					    AND id_producto = :sesion;");
-	    				$active->execute(array(':hotel'  => $exist[$i],
+	    				$edit = $active->execute(array(':hotel'  => $exist[$i],
 						    			       ':pais'	=> $pais,
 						    			       ':sesion' => $sesion));
+	    				if (!$edit) {
+	    					$uncommit++;
+	    				}
     				}	
     			}
 
@@ -119,10 +127,19 @@
 						    			       ':pais'	=> $pais,
 						    			       ':sesion' => $sesion,
 						    			       ':empresa' => $empresa));
+	    				if ($store->rowCount() === 0) {
+	    					$uncommit++;
+	    				}
     				}
     			}
 
     		}
+    	}
+
+    	//Destruir las Sessiones
+    	if ($uncommit === 0) {
+    		Session::destroy('hoteles');
+    		Session::destroy('indice');
     	}
     	
 
