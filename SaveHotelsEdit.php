@@ -26,8 +26,9 @@
         	Session::set('hoteles', $hotels);
         	//Guardo la cantidad de hoteles activos
         	Session::set('indice', $indice);
-       
-            return $hotel->fetchAll();
+            if (Session::get('hoteles') && Session::get('indice')) {
+                return $hotel->fetchAll();
+            }
         }
 
     }
